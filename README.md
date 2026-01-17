@@ -5,6 +5,8 @@ This plugin displays user messages posted on the forum in two formats: a separat
 
 Plugin for Cotonti CMS that displays forum posts authored by a user, both as a standalone page for the current user and as a tab in the user profile.
 
+![Forum-Posts-User-Cotonti-2026-webitproff-001](https://github.com/user-attachments/assets/28dc5a5a-117b-4578-979c-59e2ee9d002d)
+
 ---
 
 ## Description
@@ -261,5 +263,5 @@ Compatible with standard forum markup settings.
 Safe for custom themes (template-based output).
 
 License BSD License
-
+Date: Jan 17Th, 2026
 Author: webitproff https://github.com/webitproff
