@@ -1,0 +1,113 @@
+<?php
+/**
+ * [BEGIN_COT_EXT]
+ * Hooks=standalone
+ * [END_COT_EXT]
+ */
+
+/**
+ * forumspostsuser.php - Plugin Users latest posts. Frontend Page latest posts of User in Forums
+ *
+ * forumspostsuser plugin for Cotonti 0.9.26, PHP 8.4+
+ * Filename: forumspostsuser.php
+ *
+ * Date: Jan 16Th, 2026
+ * @package forumspostsuser
+ * @version 2.0.1
+ * @author webitproff
+ * @copyright Copyright (c) webitproff 2026 | https://github.com/webitproff
+ * @license BSD
+ */
+ 
+defined('COT_CODE') or die('Wrong URL');
+
+require_once cot_incfile('forumspostsuser', 'plug');
+require_once cot_incfile('forums', 'module');
+
+
+// Извлекаем параметр 'id' из глобального массива $_GET и преобразуем в целое число
+$id = cot_import('id', 'G', 'INT'); 
+
+// Блокируем выполнение, если у пользователя нет id, потому что он смотрит список именно своих постов
+cot_block($usr['id']); 
+
+
+// присваиваем шаблону имя части и/или локации расширения
+$tpl_ExtCode = 'forumspostsuser'; // Extentions Code
+$tpl_PartExt = null; // area
+$tpl_PartExtSecond = null; // location
+
+// Загружаем шаблон для админки плагина forumspostsuser
+$mskin = cot_tplfile([$tpl_ExtCode, $tpl_PartExt, $tpl_PartExtSecond], 'plug', true);
+
+// Создаём объект шаблона XTemplate с указанным файлом шаблона в $mskin выше
+$t = new XTemplate($mskin);
+
+
+
+$user_id = (int) (Cot::$usr['id'] ?? 0);
+
+if (Cot::$usr['id'] > 0) {
+	$maxrowsperpage = (int)(Cot::$cfg['plugin']['forumspostsuser']['showpostsinlist'] ?? 5);
+	$postscutinlist = (int)(Cot::$cfg['plugin']['forumspostsuser']['postscutinlist'] ?? 100);
+	list($pg, $d, $durl) = cot_import_pagenav('d', $maxrowsperpage);
+
+    // Подсчёт общего количества постов
+    $sql = Cot::$db->query("SELECT COUNT(*) FROM $db_forum_posts p JOIN $db_forum_topics t ON p.fp_topicid = t.ft_id WHERE p.fp_posterid = ?", [$user_id]);
+    $totalpostsuser = $sql->fetchColumn();
+
+
+    $pagenav = cot_pagenav(
+        'plug',
+        'e=forumspostsuser',
+        $d,
+        $totalpostsuser,
+        $maxrowsperpage,
+        'd',
+        '',
+        false,
+        '',
+        'plug',
+        'e=forumspostsuser'
+    );
+
+	$t->assign(cot_generatePaginationTags($pagenav));
+
+    // Запрос постов пользователя
+    $sqlforumspostsuser = Cot::$db->query(
+        "SELECT p.fp_id, p.fp_topicid, p.fp_updated, p.fp_text, t.ft_title, t.ft_id, t.ft_cat
+         FROM $db_forum_posts p JOIN $db_forum_topics t ON p.fp_topicid = t.ft_id
+         WHERE p.fp_posterid = ?
+         ORDER BY p.fp_updated DESC
+         LIMIT ?, ?",
+        [$user_id, (int)$d, (int)$maxrowsperpage]
+    );
+
+    $ii = 0;
+    while ($row = $sqlforumspostsuser->fetch()) {
+        if (cot_auth('forums', $row['ft_cat'], 'R')) {
+            $ii++;
+            $row['fp_text'] = cot_parse($row['fp_text'], Cot::$cfg['forums']['markup'] ?? false);
+            $row['fp_text'] = preg_replace("'<[\/\!]*?[^<>]*?>'si", "", $row['fp_text']);
+            $row['fp_text'] = cot_string_truncate($row['fp_text'], $postscutinlist, true, false, '...');
+
+            $t->assign([
+                'FORUMSPOSTSUSER_DATE' => cot_date('datetime_medium', $row['fp_updated']),
+				'FORUMSPOSTSUSER_CATEGORY_SHORT' => isset(Cot::$structure['forums'][$row['ft_cat']]['title']) ? cot_rc_link(cot_url('forums', 'm=topics&s=' . $row['ft_cat']), htmlspecialchars(Cot::$structure['forums'][$row['ft_cat']]['title'])) : '',
+                'FORUMSPOSTSUSER_FORUMS_TITLE' => htmlspecialchars($row['ft_title'], ENT_QUOTES, 'UTF-8'),
+                'FORUMSPOSTSUSER_FORUMS_TEXT' => htmlspecialchars($row['fp_text'], ENT_QUOTES, 'UTF-8'),
+                'FORUMSPOSTSUSER_FORUMS_POST_URL' => cot_url('forums', ['m' => 'posts', 'q' => $row['ft_id']], '#' . $row['fp_id']),
+            ]);
+            $t->parse('MAIN.POSTS.TOPIC');
+        }
+    }
+
+	$t->assign([
+		'FORUMSPOSTSUSER_COUNT' => $totalpostsuser,
+	]);
+    $t->parse('MAIN.POSTS');
+
+} 
+
+
+
