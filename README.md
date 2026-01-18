@@ -5,6 +5,13 @@ This plugin displays user messages posted on the forum in two formats: a separat
 
 Plugin for Cotonti CMS that displays forum posts authored by a user, both as a standalone page for the current user and as a tab in the user profile.
 
+[![Cotonti Compatibility](https://img.shields.io/badge/Cotonti_Siena-0.9.26-orange.svg)](https://github.com/Cotonti/Cotonti)
+[![PHP](https://img.shields.io/badge/PHP-8.4-purple.svg)](https://www.php.net/releases/8_4_0.php)
+[![MySQL](https://img.shields.io/badge/MySQL-8.0-blue.svg)](https://www.mysql.com/)
+[![Bootstrap v5.3.8](https://img.shields.io/badge/Bootstrap-v5.3.8-blueviolet.svg)](https://getbootstrap.com/)
+
+
+
 ![Forum-Posts-User-Cotonti-2026-webitproff-001](https://github.com/user-attachments/assets/28dc5a5a-117b-4578-979c-59e2ee9d002d)
 
 ---
